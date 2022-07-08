@@ -1,0 +1,47 @@
+version: "3"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=U4cyd5GjfEv43yaG
+      - MYSQL_PASSWORD=U4cyd5GjfEv43yaG
+      - MYSQL_USER=wordpress
+      - MYSQL_DATABASE=wordpress
+    volumes: 
+      - dbdata:/var/lib/mysql
+    command: '--default-authentication-plugin=mysql_native_password'
+    networks:
+      - wordpress-network
+  wordpress:
+    depends_on:
+      - db
+    image: bitnami/php-fpm:7.4
+    container_name: wordpress
+    restart: unless-stopped
+    volumes:
+      - ../wordpress-docker:/wordpress
+    networks:
+      - wordpress-network
+  webserver:
+    depends_on:
+      - wordpress
+    image: nginx:1.18.0-alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-conf:/etc/nginx/conf.d
+      - ../wordpress-docker:/wordpress
+    networks:
+      - wordpress-network
+networks:
+  wordpress-network:
+    driver: bridge
+volumes:
+  dbdata:
